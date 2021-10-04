@@ -21,7 +21,8 @@ exports.view = (req, res) => {
             connection.release();
 
             if (!err) {
-                res.render('home', { rows });
+                let removedUser = req.query.removed;
+                res.render('home', { rows, removedUser });
             } else {
                 console.log(err);
             }
@@ -143,16 +144,31 @@ exports.update = (req, res) => {
 
 //Delete User
 exports.delete = (req, res) => {
+    // pool.getConnection((err, connection) => {
+    //     if (err) throw err; //not connected
+    //     console.log('Connected as ID ' + connection.threadId);
+
+    //     connection.query('DELETE FROM user WHERE id = ?', [req.params.id], (err, rows) => {
+    //         //when done with the question
+    //         connection.release();
+
+    //         if (!err) {
+    //             res.redirect('/');
+    //         } else {
+    //             console.log(err);
+    //         }
+    //         console.log('The data from user table: \n', rows);
+    //     });
+    // });
+
+
     pool.getConnection((err, connection) => {
         if (err) throw err; //not connected
-        console.log('Connected as ID ' + connection.threadId);
-
-        connection.query('DELETE FROM user WHERE id = ?', [req.params.id], (err, rows) => {
-            //when done with the question
+        connection.query('UPDATE user SET status = ? where id = ?', ['removed', req.params.id], (err, rows) => {
             connection.release();
-
             if (!err) {
-                res.redirect('/');
+                let removedUser = encodeURIComponent('User succesfully removed.');
+                res.redirect('/?removed=' + removedUser);
             } else {
                 console.log(err);
             }
@@ -160,3 +176,27 @@ exports.delete = (req, res) => {
         });
     });
 }
+
+//viewall
+exports.viewall = (req, res) => {
+    pool.getConnection((err, connection) => {
+        if (err) throw err; //not connected
+        console.log('Connected as ID ' + connection.threadId);
+
+        connection.query('SELECT * FROM user WHERE id = ?', [req.params.id], (err, rows) => {
+            //when done with the question
+            connection.release();
+
+            if (!err) {
+                res.render('view-user', { rows });
+            } else {
+                console.log(err);
+            }
+            console.log('The data from user table: \n', rows);
+        });
+    });
+}
+
+
+
+
